@@ -1,7 +1,7 @@
 (function (angular) {
 	var app = angular.module("ReportApp", ['ngRoute']);
 
-	app.config(['$routeProvider', function($routeProvider) {
+	app.config(['$routeProvider, $locationProvider', function($routeProvider, $locationProvider) {
 		$routeProvider
 			.when('/', {
 				templateUrl: 'templates/home.html'
@@ -12,7 +12,9 @@
 			.when('/feedback', {
 				templateUrl: 'templates/feedback.html',
 				controller: 'FeedbackCtrl'
-			})
+			});
+
+		$locationProvider.html5Mode(true);
 	}]);
 
 	app.directive('navItem', function () {
