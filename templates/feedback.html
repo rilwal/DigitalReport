@@ -1,0 +1,73 @@
+<h1>Stakeholder Feedback</h1>
+<p>This page is dedicated to the feedback I have received from my stakeholders. It also contains the stakeholder profiles, as well as what improvements I made to fix each suggestion.</p>
+<h2>Stakeholder Profiles</h2>
+
+<div class="container">
+	<div class="row">
+		<div class="stakeholder card card-block col-sm-6" ng-repeat="stakeholder in stakeholders">
+			<div class="col-sm-3"><img style="width: 100%; border-radius: 1000px; border: 1px solid #373a3c" ng-src="{{stakeholder.steam_pic}}"></div>
+			<div class="col-sm-9">
+				<table>
+					<tr>
+						<td><strong>Name: </strong></td>
+						<td>{{stakeholder.name}}</td>
+					</tr>
+					<tr>
+						<td><strong>Steam: </strong></td>
+						<td><a ng-href="{{stakeholder.steam}}">{{stakeholder.steam}}</a></td>
+					</tr>
+					<tr>
+						<td><strong>Role: </strong></td>
+						<td>{{stakeholder.role}}</td>
+					</tr>
+				</table>
+			</div>
+		</div>
+	</div>
+
+	<h2>Feedback</h2>
+
+
+	<div class="card card-primary">
+		<div class="card-header">
+			<strong>Feedback session 1:</strong>
+			<span class="pull-right text-muted">Daniel Alexander</span>
+		</div>
+		<div class="card-block">
+			<h2>Initial Feedback</h2>
+			<p>This is the initial feedback given</p>
+			<h4>Positives</h4>
+			<ul>
+				<li>I like the smoothness of the movement</li>
+
+			</ul>
+			<h4>Negatives</h4>
+			<ul>
+				<li>As a level designer, I feel the engine may be too slow. It is maintaining an acceptable framerate with the current workload, but it may get slow on more complex levels.</li>
+				<li></li>
+			</ul>
+
+		</div>
+
+		<div class="card panel-primary card-inverse">
+			<div class="card-header">
+				<strong>Feedback session 2:</strong>
+				<span class="pull-right text-muted">Alfie Hamilton</span>
+			</div>
+			<div class="card-block">
+				<h2>The Feedback:</h2>
+				<h3>Positives</h3>
+				<ul>
+					<li>The games physics and movement feel good to play.</li>
+					<li>I like the feeling of the walljump</li>
+					<li>The way you can control you jump height is cool</li>
+				</ul>
+				<h3>Negatives</h3>
+				<ul>
+					<li>It needs animations</li>
+					<li></li>
+				</ul>
+			</div>
+		</div>
+	</div>
+</div>
