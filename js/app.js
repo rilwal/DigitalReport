@@ -1,7 +1,7 @@
 (function (angular) {
 	var app = angular.module("ReportApp", ['ngRoute']);
 
-	app.config(['$routeProvider, $locationProvider', function($routeProvider, $locationProvider) {
+	app.config(['$routeProvider', '$locationProvider', function($routeProvider, $locationProvider) {
 		$routeProvider
 			.when('/', {
 				templateUrl: 'templates/home.html'
