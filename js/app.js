@@ -34,9 +34,40 @@
 		};
 	}]);
 
+	app.controller('MusicCtrl', ['$scope', '$http', function ($scope, $http) {
+
+		var player = $("#player")[0];
+
+		player.addEventListener("canplay", function() { player.addEventListener("canplay", function (e) { e.target.play(); })});
+
+		player.addEventListener('ended', function () {
+			console.log("song ended");
+			console.log($scope);
+			$scope.$apply($scope.setSong($scope.playing + 1));
+		});
+
+		$scope.isActive = function (song) {
+			return song == $scope.playing;
+		};
+
+		$scope.setSong = function(song) {
+			$scope.playing = song;
+			$scope.file = $scope.base + $scope.songs[song].file;
+		}
+
+		$http.get('/music/album.json').then(function(response) {
+			$scope.base = response.data.base;
+			$scope.songs = response.data.songs;
+
+			$scope.setSong(0);
+
+		});
+
+	}]);
+
+
 	app.controller('FeedbackCtrl', ['$scope', function ($scope) {
 		$scope.stakeholders = [
-
 		{
 			'name': 'Daniel Alexander',
 			'steam': 'http://steamcommunity.com/id/Xwing669',

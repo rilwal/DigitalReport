@@ -1,0 +1,46 @@
+{
+	"cover": "thomas/cover.jpg",
+	"base": "music/thomas/",
+	"songs": [
+		{
+			"file": "01 Where Are You.mp3",
+			"title": "Where Are You"
+		},
+		{
+			"file": "02 Inertia.mp3",
+			"title": "Inertia"
+		},
+		{
+			"file": "03 Hope.mp3",
+			"title": "Hope"
+		},
+		{
+			"file": "04 United We Stand.mp3",
+			"title": "United We Stand"
+		},
+		{
+			"file": "05 Divided We Fall.mp3",
+			"title": "Divided We Fall"
+		},
+		{
+			"file": "06 Ghosts Of The Past.mp3",
+			"title": "Ghosts Of The Past"
+		},
+		{
+			"file": "07 Alone Again.mp3",
+			"title": "Alone Again"
+		},
+		{
+			"file": "08 Lost.mp3",
+			"title": "Lost"
+		},
+		{
+			"file":"10 Escape.mp3",
+			"title": "Escape"
+		},
+		{
+			"file":"11 Freedom.mp3",
+			"title": "Freedom"
+		}
+	]
+}
