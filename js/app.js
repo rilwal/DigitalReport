@@ -9,6 +9,10 @@
 			.when('/brief', {
 				templateUrl: 'templates/brief.html'
 			})
+			.when('/plan', {
+				templateUrl: 'templates/plan.html',
+				controller: 'planCtrl'
+			})
 			.when('/feedback', {
 				templateUrl: 'templates/feedback.html',
 				controller: 'FeedbackCtrl'
@@ -85,4 +89,61 @@
 	app.controller('ReportCtrl', ['$scope', function($scope){
 		$scope.pi = 3.14159;
 	}])
+
+	app.controller('planCtrl', function () {
+		var targets = {
+			"home": {
+				"image": "title.webp",
+				"map": "titlemap"
+			},
+			"levelselect": {
+				"image": "levelselect.webp",
+				"map": "levelselectmap"
+			},
+			"level": {
+				"image": "in-game.webp",
+				"map": "levelmap"
+			},
+			"levelfinish": {
+				"image": "level-win.webp",
+				"map": "winmap"
+			},
+			"options": {
+				"image": "options.webp",
+				"map": "optionsmap"
+			},
+			"controls": {
+				"image" :"controls.webp",
+				"map": "controlsmap"
+			}
+		}
+
+
+		var image = document.getElementById("plan"),
+			areas = document.getElementsByTagName("area"),
+			quit = document.getElementById("quit");
+
+		function setTarget(name) {
+			var target = targets[name];
+			image.style.backgroundImage = "url(img/" + target.image + ")";
+			image.setAttribute("usemap", target.map);
+		}
+
+		for (var i = 0; i < areas.length; i++) {
+			var a = areas[i];
+
+			if (a.getAttribute("data-target")) {
+				a.addEventListener("click", function (e) {
+					e.preventDefault();
+					setTarget(e.target.getAttribute("data-target"));
+				});
+			}
+		}
+
+		quit.addEventListener("click", function (e) {
+			e.preventDefault();
+			history.go(-1);
+		})
+		setTarget("home");
+	});
 })(angular);
