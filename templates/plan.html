@@ -1,7 +1,12 @@
 
 <h1>Planning</h1>
-<p>The first phase of making any large application successful is planning.</p>
+<p>The first phase of making any large application successful is planning. There are a number of things I need to plan in order to create a successful game. These include the layout of the user interface elements and the different screens, as well as the planning of the general structures and algorithms I will use in the game.</p>
+
+<h2>The interactive demo</h2>
+<p>This is a demo of the different screens in the game, as well as the way they interact with each other, ie the way to move between them.</p>
+<div class="center-block" style="width: 800px">
 <img style="transition: .1s linear all; width: 800px; height: 600px;" id="plan">
+
 <map name="titlemap">
 	<area shape="rectangle" coords="45,410,180,446" href data-target="levelselect">
 	<area shape="rectangle" coords="45,455,180,500" href data-target="options">
@@ -26,3 +31,77 @@
 <map name="controlsmap">
 	<area shape="rectangle" coords="33,27,133,127" href data-target="options">
 </map>
+</div>
+
+<h2>The structure of the game</h2>
+<p>Internally the game will have a number of classes which I will use to abstract complex functionality. Here is a diagram depicting the basic structure I intend to use: </p>
+<img src="img/Diagram.svg">
+
+<h3>Types</h3>
+<p>A game is a complex piece of software which needs a lot of performance. In order to further this goal I need to optimize things on a very low level, which means I need to be able to define differently sized integers easily. There are also a few basic structures that will make my life a lot easier. This is a list of some of them:</p>
+
+<h4>Typedefs</h4>
+<p>A typedef is a construct in C like languages which allows us to alias one type to another, including possilbly complex types. Here is a list of types I will create by typedef: </p>
+
+<ul class="monospace">
+<li>int8_t -> s8</li>
+<li>int16_t -> s16</li>
+<li>int32_t -> s32</li>
+<li>int64_t -> s64</li>
+
+<li>uint8_t -> u8</li>
+<li>uint16_t -> u16</li>
+<li>uint32_t -> u32</li>
+<li>uint64_t -> u64</li>
+
+<li>float -> float32</li>
+<li>double -> float64</li>
+</ul>
+
+<h4>Data structures</h4>
+<p>A data structure, or <code>struct</code> is another C construct which allows the developer to group related variables. Here are some of the structs I plan to use in the game:</p>
+
+<ul>
+	<li><strong>Vector2</strong> A Vector2 is a struct containing two float32 for use as a mathematical vector. This is helpful for physics.
+	
+	<li><strong>Rect</strong> A Rect represents a rectangle. It contains four float32 values: X, Y, Width and Height.
+
+	<li><strong>iVec2</strong> Same as Vector2, but with integers.
+
+	<li><strong>iRect</strong> Same as Rect, but with integers.
+
+	<li><strong>MouseState</strong> Represents the state of the mouse, two booleans for the buttons, and two integers for the x and y pixel locations.
+</ul>
+
+
+<h4>Objects</h4>
+<p>The game will use a variety of classes to do different things. Here is a basic list of them, including possible method names and member variables.</p>
+
+
+<ul>
+<li>
+	<p><strong>Renderer</strong> The Renderer class is responsible for the rendering of graphics.</p>
+	<strong>Member Variables:</strong>
+	<ul>
+		<li><strong>private ScreenBuffer Buffer</strong>: This is an instance of the ScreenBuffer data structure which consists of Buffer information such as Width and Height as well as a pointer to the memory in which drawing should be done. This is private as the renerer itself should be the only thing able to access this buffer.</li>
+
+		<li><strong>public HWND Window</strong>: This should contain the <a href="https://msdn.microsoft.com/en-nz/library/windows/desktop/aa383751(v=vs.85).aspx">HWND</a> object representing the window the renderer is blitting to.
+	</ul>
+	<strong>Methods:</strong>
+	<ul>
+	<li>	
+		<strong>void Renderer::Initialize():</strong> This function should determine the correct resolution, open a window by calling Renderer::OpenWindow(), allocate any buffers and do any other setup required for rendering. A constructor is not used as the renderer needs to be able to be reinitialized.
+	</li>
+	<li>
+		<strong>bool Renderer::OpenWindow(int Width, int Height, char* Title):</strong> This functioon should open a window, and set hte renderers <code>HWND Window</code> member to the handle returned by WinAPI.
+	</li>
+	<li>
+		<strong>bool Renderer::Refresh()</strong> This function should: copy the contents of the screen buffer to the screen using WinAPI functions, then clear the screen by either copying a background image to it, or by filling the buffer with a color.
+	</li>	
+	<li>
+		<strong>
+	</li>
+	</ul>
+</li>
+</ul>
+

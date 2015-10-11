@@ -9,6 +9,9 @@
 			.when('/brief', {
 				templateUrl: 'templates/brief.html'
 			})
+			.when('/evidence', {
+				templateUrl: 'templates/evidence.html'
+			})
 			.when('/plan', {
 				templateUrl: 'templates/plan.html',
 				controller: 'planCtrl'
@@ -20,6 +23,8 @@
 
 		$locationProvider.html5Mode(true);
 	}]);
+
+
 
 	app.directive('navItem', function () {
 		return {
@@ -87,7 +92,15 @@
 	}]);
 
 	app.controller('ReportCtrl', ['$scope', function($scope){
-		$scope.pi = 3.14159;
+
+		$scope.$on("$routeChangeSuccess", function () {
+			setTimeout(function () {
+			$('pre code').each(function(i, block) {
+   				hljs.highlightBlock(block);
+  			});
+			}, 10);
+		});
+
 	}])
 
 	app.controller('planCtrl', function () {

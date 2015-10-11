@@ -9,8 +9,10 @@
 	<base href="/" />
 
 	<title>Document</title>
-	<link rel="stylesheet" href="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.css">
+	<link rel="stylesheet" href="https://cdn.rawgit.com/twbs/bootstrap/v4-dev/dist/css/bootstrap.min.css">
+	<link rel="stylesheet" type="text/css" href="css/app.css">
 	<link rel="stylesheet" type="text/css" href="css/print.css" media="print">
+	<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/styles/monokai_sublime.min.css">
 </head>
 <body>
 	<nav class="navbar navbar-dark navbar-fixed-top bg-inverse" ng-controller="NavbarCtrl as nav">
@@ -27,8 +29,11 @@
 				<li class="nav-item" ng-class="{active: nav.isActive('/feedback')}">
 					<a class="nav-link" href="/feedback">Feedback</a>
 				</li>
-				<li class="nav-item" ng-class="{active: nav.isActive('/Plan')}">
+				<li class="nav-item" ng-class="{active: nav.isActive('/plan')}">
 					<a class="nav-link" href="/plan">Plan</a>
+				</li>
+				<li class="nav-item" ng-class="{active: nav.isActive('/evidence')}">
+					<a class="nav-link" href="/evidence">Evidence</a>
 				</li>
 			</ul>
 
@@ -44,6 +49,9 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.5/angular-route.min.js" type="text/javascript" charset="utf-8"></script>
 	<script src="js/app.js" type="text/javascript" charset="utf-8"></script>
 
+
+<script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/8.8.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad();</script>
 
 </body>
 </html>

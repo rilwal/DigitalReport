@@ -1,0 +1,345 @@
+<h2>Evidence</h2>
+<p>This page contains the evidence for my programs complexity, proving it meets the assessment requirements.</p>
+
+
+<quote>at least one indexed data structure (list)</quote>
+
+<p>I use many indexed data structures throughout my code. One such use is the list of existing entities within a level, which is a std::list&lt;GameObject&gt;</p>
+
+<pre>
+<code class="cpp">//In the Level class decleration I declare the list:
+std::list&lt;GameObject*&gt; Entities;
+
+//In the function Level::SpawnEntity(Gameobject* Object, u32 X, u32 Y) I append to it
+Entities.push_back(Object);
+
+//In the Level::Update(double DeltaTime) function I loop over the list of entities and update each one:
+for (auto Entity : Entities) {
+    Entity->Update(DeltaTime);
+}</code>
+</pre>
+
+<cite>a modular structure </cite>
+<p>My code uses classes with both a public interface, and an independant internal implementation. This means that these classes are modular, and could be swapped out. For example the Renderer class is implemented entirely in software, but could be swapped for a DirectX or OpenGL based hardware renderer. This is commonly referred to as encapsulation.</p>
+<pre>
+<code>//The renderer is called without any knowledge of how it works:
+Renderer.DrawRectangle(Renderer.Config.RenderResX - 66, Renderer.Config.RenderResY - 66, 36, 36, BackgroundColor);
+</code>
+</pre>
+
+<cite>input and output</cite>
+<p>The game takes input from the keyboard and mouse (handled by the InputManager class), and outputs to the screen (handled by the Renderer class</p>
+
+<pre><code>//Here is an example of input
+if (InputManager::Get().GetKeyDown('Q')) if (SelectedSprite > 0) SelectedSprite--;
+
+//The raw code handling input grabs key data from Windows:
+void InputManager::Update(){
+    memcpy(&amp;KeyStatePrevious[0], &amp;KeyStateCurrent[0], 255); //Copy previous frames keystate into KeyStatePrevious 
+    GetKeyboardState(this->KeyStateCurrent);
+}
+
+//And exposes it through a public method:
+bool InputManager::GetKeyDown(unsigned char Key){
+    return (KeyStateCurrent[Key] &amp; 0xF0) != 0 &amp;! (KeyStatePrevious[Key] &amp; 0xF0) != 0; //If the key is down, but wasn't last frame
+}
+
+//And here is one of output
+renderer->DrawSprite(Spr, 0, 0, Spr->Width, Spr->Height, (int)(Position.X), (int)(Position.Y), true);
+
+//Similarly, this code is accessing a lower level of output, in this case a direct buffer for drawing:
+//The Blend() function does <a href="https://en.wikipedia.org/wiki/Alpha_compositing">alpha compositing</a>.
+
+void Renderer::DrawSpriteSS(_Sprite * Spr, int SrcX, int SrcY, int Width, int Height, int DstX, int DstY, bool ShouldBlend) {
+    //Out of bounds checks
+    //If the sprite is drawn partially offscreen, draw a section
+    //If it is fully offscreen, don't draw it.
+
+    if (DstX &lt; 0) {
+        SrcX -= DstX;
+        Width += DstX;
+
+        DstX = 0;
+        if (Width &lt;= 0) return;
+    }
+
+    if (DstY &lt; 0) {
+        SrcY -= DstY;
+        Height += DstY;
+
+        DstY = 0;
+        if (Height &lt;= 0) return;
+    }
+
+    if (DstX + Width &gt; Buffer-&gt;Width) {
+        Width = Buffer-&gt;Width - DstX;
+        if (Width &lt;= 0) return;
+    }
+
+    if (DstY + Height &gt; Buffer-&gt;Height) {
+        Height = Buffer-&gt;Height - DstY;
+        if (Height &lt;= 0) return;
+    }
+
+    for (register int y = SrcY; y &lt; (SrcY + Height); y++) {
+        if (ShouldBlend &amp;&amp; Spr-&gt;hasTransparency) {
+            //If the pixel should be drawn with transparency itterate over each pixel
+            for (register int x = SrcX; x &lt; (SrcX + Width); x++) {
+                unsigned int ARGB = Spr-&gt;Data[y * Spr-&gt;Width + x];
+                unsigned char* SA = ((unsigned char*)&amp;ARGB) + 3;
+
+                if (*SA == 0) { //If the pixel is fully transparent, skip to the next loop itteration as no rendering is needed
+                    continue;
+                }
+                else if (*SA == 255) { //If the pixel has no transparency, copy it into the destination
+                    ((u32*)Buffer-&gt;Memory)[((y - SrcY) + DstY) * Buffer-&gt;Width + ((x - SrcX) + DstX)] = ARGB;
+                }
+                else { //Otherwise blend it properly
+                    Blend(&amp;ARGB, &amp;((unsigned int*)Buffer-&gt;Memory)[((y - SrcY) + DstY) * Buffer-&gt;Width + ((x - SrcX) + DstX)]);
+                }
+            }
+        }
+        else {
+            //If the sprite has no transparency, or we are drawing without blending enabled, use memcpy to copy entire rows at once for speed
+            memcpy((void*)&amp;((u32*)Buffer-&gt;Memory)[((y - SrcY) + DstY) * Buffer-&gt;Width + DstX], (void*)&Spr-&gt;Data[y * Spr-&gt;Width + SrcX], Width * 4);
+
+        }
+    }
+}
+
+//And finally the buffer is pushed onto the screen with WinAPI
+bool Renderer::Refresh() {
+    //Now update the screen
+    //Blit to the screen
+
+    BitBlt(DeviceContext, 0, 0, Buffer->Width, Buffer->Height, HdcMem, 0, 0, SRCCOPY);
+        
+    if (InstructionSet::AVX()) {
+        //Use AVX instrictions to loop over the buffer, filling it with our color, 256 bits at a time
+        uP len = (Buffer->Width * Buffer->Height) / 8;
+
+        for (register uP i = 0; i &lt; len; i++)
+            _mm256_stream_si256(&amp;((__m256i*)Buffer->Memory)[i], clearval);
+    }
+    else if (InstructionSet::SSE()) {
+        //Use SSE instrictions to loop over the buffer, filling it with our color, 128 bits at a time
+        uP len = (Buffer->Width * Buffer->Height) / 4;
+        for (register uP i = 0; i &lt; len; i++)
+            _mm_stream_si128(&amp;((__m128i*)Buffer->Memory)[i], clearval_sse);
+    }
+    else {
+        //If the CPU is ancient, just fill it 32 bits at a time (SSE runs on Pentium III, the game probably won't run on any hardware that needs this
+        //But it is here just in case! It may serve a role if alternate archutectures are supported in the future.
+        DrawRectangle(0, 0, Config.RenderResX, Config.RenderResY, rgba(102, 102, 204, 255));
+    }
+
+    return !ShouldClose;
+}
+
+</code></pre>
+
+<cite>procedural structures that combine sequential, conditional, and iterative structures</cite>
+
+<pre><code>//This is part of the WinMain() entry point. as said function is very long, parts are removed.
+//Shown are sequential (all the commands without control flow statements), condition (if and switch statements, and iterative (for loops and the main game while loop) structures)
+
+bool GameRunning = true;
+while (GameRunning) {
+
+    bool Crosshair = false;
+
+    //Update the Input Manager
+    InputManager::Get().Update();
+    ControllerState Controller = InputManager::Get().GetControllerState();
+    MouseState MS = InputManager::Get().GetMouseState(Renderer.Window);
+
+    switch (G.Screen) { //The switch statement is conditional execution
+
+        case MAIN_MENU: {
+            Crosshair = true;
+            Arial.RenderString(40, 40, "Platform Game", 72, 0xffffff);
+            iRect PlayHitbox = Arial.RenderString(20, Screen.H - 108, "Play", 32, 0xffffff);
+            iRect OptionsHitbox = Arial.RenderString(20, Screen.H - 72, "Options", 32, 0xffffff);
+            iRect ExitHitbox = Arial.RenderString(20, Screen.H - 36, "Exit", 32, 0xffffff);
+
+            if (MS.Btn1) { //As are all the if statements
+                if (CheckCollisionAABB(PlayHitbox, { (float)MS.x, (float)MS.y, 1.f, 1.f })) {
+                    G.Screen = IN_GAME;
+                }
+                else if (CheckCollisionAABB(OptionsHitbox, { (float)MS.x, (float)MS.y, 1.f, 1.f })) {
+                    G.Screen = OPTIONS_MENU;
+                }
+                else if (CheckCollisionAABB(ExitHitbox, { (float)MS.x, (float)MS.y, 1.f, 1.f })) {
+                    GameRunning = false;
+                }
+            }
+        } break;
+
+        case IN_GAME:
+
+
+        //Calculate which chunks we need to draw
+        ChunksToDraw.clear();
+
+        int camerafirstchunkx = CameraPos.X / 512;
+        int camerafirstchunky = CameraPos.Y / 512;
+
+        //Here is some iteration
+
+        for (int i = 0; i &lt; Renderer.Config.RenderResX / 512 + 2; i++) {
+            for (int j = 0; j &lt; Renderer.Config.RenderResY / 512 + 2; j++) {
+                ChunksToDraw.push_back({ MAX(0, camerafirstchunkx + i),  MAX(0, camerafirstchunky + j) });
+            }
+        }
+
+        //Update the level (including all entitites)
+        level.Update(DeltaTime);
+
+        //And draw all the chunks
+        for (auto C : ChunksToDraw) {
+            level.DrawChunk(&amp;Renderer, C.X, C.Y);
+        }
+
+        //Draw the entities too
+        for (auto E : level.Entities) {
+            E-&gt;Draw(&amp;Renderer);
+        }
+
+        //Some toggles
+        if (InputManager::Get().GetKeyDown('P'))Paused = !Paused;
+        if (InputManager::Get().GetKeyDown(VK_F2)) G.editing = !G.editing;
+
+        //If in edit mode
+        if (G.editing) {
+
+            //Check the mouse button
+            if (MS.Btn1) {
+                //Find the grid coordinates of the mouse
+                int X = (MS.x + CameraPos.X) / 32;
+                int Y = (MS.y + CameraPos.Y) / 32;
+
+                //If they are in bounds
+                if (!(X &lt; 0 || Y &lt; 0 || X &gt; UINT16_MAX || Y &gt; UINT16_MAX)) {
+
+                        //Get the coordinate of the chunk
+                    int ChunkX = X / 16;
+                    int ChunkY = Y / 16;
+
+                        //And the coordinate within the chunk
+                    int LocalX = X % 16;
+                    int LocalY = Y % 16;
+
+                        //Get a pointer to the chunk from the level
+                    Chunk* C = level.GetChunk(ChunkX, ChunkY);
+
+                        //If it succeeded
+                    if (C != nullptr) {
+                            //Set the block at the grid location to the currently selected sprite and collision values
+                        C-&gt;Grid[16 * LocalY + LocalX] = { SelectedSprite, Collision };
+
+                            //If the chunk isn't listed as existing, list it now. This is for level saving purposes.
+                        if (!C-&gt;inIndex) {
+                            C-&gt;inIndex = true;
+                            level.ExistingChunks.push_back({ C-&gt;X, C-&gt;Y });
+                        }
+
+                            //Update the geometry
+                        level.SetChunkGeometry(C);
+                    }
+                }
+            }
+
+            //Same as mouse1, but delete the block
+            if (MS.Btn2) {
+                int X = (MS.x + CameraPos.X) / 32;
+                int Y = (MS.y + CameraPos.Y) / 32;
+
+                if (!(X &lt; 0 || Y &lt; 0)) {
+
+                    int ChunkX = X / 16;
+                    int ChunkY = Y / 16;
+
+                    int LocalX = X % 16;
+                    int LocalY = Y % 16;
+
+                    Chunk* C = level.GetChunk(ChunkX, ChunkY);
+
+                    if (C != nullptr) {
+                        C-&gt;Grid[16 * LocalY + LocalX] = { 0, 0 };
+                        level.SetChunkGeometry(C);
+                    }
+                }
+            }
+
+            //More toggles
+            if (InputManager::Get().GetKeyDown('Q')) if (SelectedSprite &gt; 0) SelectedSprite--;
+            if (InputManager::Get().GetKeyDown('E')) if (SelectedSprite &lt; NumSprites - 1) SelectedSprite++;
+            if (InputManager::Get().GetKeyDown('Z')) G.debuglos = !G.debuglos;
+            if (InputManager::Get().GetKeyDown(VK_TAB)) Collision = Collision == 0 ? COLLIDE_ALL : 0;
+            if (InputManager::Get().GetKeyDown('C')) DrawGeometry = !DrawGeometry;
+            if (InputManager::Get().GetKeyDown('S')) {
+                if (InputManager::Get().GetKeyState(VK_CONTROL)) {
+                    TestForm.Enabled = true;
+                }
+            }
+
+
+            //Draw the chunk geometry if requestsed, by looping over all the chunks and calling their DrawChunkCollisionGeometry method
+            if (DrawGeometry) {
+                for (auto C : ChunksToDraw) {
+                    level.DrawChunkCollisionGeometry(&amp;Renderer, C.X, C.Y);
+                }
+            }
+
+
+            Crosshair = true;
+        }
+
+        //If the player is being moved, cancel the camera pan
+
+        if (InputManager::Get().GetKeyState('W') || InputManager::Get().GetKeyState('A') || InputManager::Get().GetKeyState('S') || InputManager::Get().GetKeyState('D') || InputManager::Get().GetKeyState(VK_SPACE)) CameraPan = false;
+
+        //If the camera isn't panning, make the player "push" the screen along
+        if (!CameraPan) {
+
+            int ResX = Renderer.Config.RenderResX;
+            int ResY = Renderer.Config.RenderResY;
+
+
+            if (Player.Position.X &lt; Renderer.GetCameraPosition().X + ResX / 4) {
+                Renderer.SetCameraPosition(Player.Position.X - ResX / 4, Renderer.GetCameraPosition().Y);
+            }
+
+            if (Player.Position.X &gt; (Renderer.GetCameraPosition().X + Renderer.Config.RenderResX) - ResX / 4) {
+                Renderer.SetCameraPosition(Player.Position.X + ResX / 4 - Renderer.Config.RenderResX, Renderer.GetCameraPosition().Y);
+            }
+
+            if (Player.Position.Y &lt; Renderer.GetCameraPosition().Y + ResY / 4) {
+                Renderer.SetCameraPosition(Renderer.GetCameraPosition().X, Player.Position.Y - ResY / 4);
+            }
+
+            if (Player.Position.Y &gt; (Renderer.GetCameraPosition().Y + Renderer.Config.RenderResY) - ResY / 4) {
+                Renderer.SetCameraPosition(Renderer.GetCameraPosition().X, Player.Position.Y + ResY / 4 - Renderer.Config.RenderResY);
+            }
+        }
+
+        char score[256];
+        sprintf_s(score, "Score: %I64d", G.player-&gt;Score);
+        Arial.RenderString(Renderer.Config.RenderResX - 250, 10, score, 32, 0xffffff);
+
+        char time[256];
+        sprintf_s(time, "Time: %.2f", Timer);
+        Arial.RenderString(Renderer.Config.RenderResX - 250, 52, time, 32, 0xffffff);
+        break;
+    }
+
+    if (!PlatformLayer.Update(DeltaTime)) GameRunning = false;
+}</code></pre>
+
+<cite>a graphical user interface (GUI) and event handling</cite>
+o	includes classes and objects (inheritance is not required)
+o	interaction between modules is minimised, modules are reused rather than duplicated, and the procedural structure of each module is efficient
+o	classes and objects are sensibly encapsulated
+o	annotation of your code and use of explanatory variable/module names so that the purpose of each part of the program is clear.
+o	documentation of the program with comments on the function and behaviour of the classes and modules.
+o	justification of the decisions you made as you developed your program and the GUI interface.
